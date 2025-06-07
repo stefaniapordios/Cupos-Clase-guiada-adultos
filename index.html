@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <base target="_top">
+    <title>Reserva Clase Guiada de Escalada</title>
+    <style>
+      body { font-family: Arial; padding: 20px; max-width: 600px; margin: auto; }
+      .hidden { display: none; }
+      .day-button { margin: 5px; padding: 10px 20px; cursor: pointer; background-color: #eee; border: 1px solid #ccc; }
+      .success { background: #d4edda; padding: 10px; margin-top: 10px; border: 1px solid #c3e6cb; }
+    </style>
+  </head>
+  <body>
+    <h2>Formulario de Reserva</h2>
+
+    <form id="reservaForm">
+      <label>Nombre completo:</label><br>
+      <input type="text" name="nombre" required><br><br>
+
+      <label>Correo electrónico:</label><br>
+      <input type="email" name="correo" required><br><br>
+
+      <label>Celular:</label><br>
+      <input type="tel" name="celular" required><br><br>
+
+      <label>Día de la semana:</label><br>
+      <div id="diasContainer"></div><br>
+
+      <label>Horario:</label><br>
+      <select name="horario" id="horarioSelect" required></select><br><br>
+
+      <button type="submit">Reservar</button>
+    </form>
+
+    <div id="successMsg" class="success hidden">¡Reserva exitosa!</div>
+
+    <script>
+      const diasContainer = document.getElementById("diasContainer");
+      const horarioSelect = document.getElementById("horarioSelect");
+      let horarios = {};
+
+      // ⚠️ Reemplaza esta URL por tu URL real de Apps Script (función doGet)
+      const URL_GET_HORARIOS = 'https://docs.google.com/spreadsheets/d/1safUIbjKknSlYZgHwXigBob-Kpc3SALSkKbjXMhPAV4/edit?gid=0#gid=0';
+      const URL_POST_RESERVA = 'https://docs.google.com/spreadsheets/d/1safUIbjKknSlYZgHwXigBob-Kpc3SALSkKbjXMhPAV4/edit?gid=1636793574#gid=1636793574';
+
+      // Cargar días y horarios desde la hoja de cálculo
+      fetch(URL_GET_HORARIOS)
+        .then(res => res.json())
+        .then(data => {
+          horarios = data;
+          for (let dia in horarios) {
+            let btn = document.createElement("button");
+            btn.textContent = dia;
+            btn.className = "day-button";
+            btn.type = "button";
+            btn.onclick = () => {
+              horarioSelect.innerHTML = "";
+              horarios[dia].forEach(h => {
+                let opt = document.createElement("option");
+                opt.value = `${dia} - ${h}`;
+                opt.text = h;
+                horarioSelect.add(opt);
+              });
+            };
+            diasContainer.appendChild(btn);
+          }
+        });
+
+      // Enviar reserva
+      document.getElementById("reservaForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        const data = new FormData(this);
+
+        fetch(URL_POST_RESERVA, {
+          method: 'POST',
+          body: data
+        }).then(res => res.text()).then(msg => {
+          if (msg.includes("Reserva confirmada")) {
+            document.getElementById("successMsg").classList.remove("hidden");
+            this.reset();
+          } else {
+            alert(msg);
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
+
+
